@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentiment Chatbot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+        }
+        .chat-container {
+            width: 100%;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        h1 {
+            margin-bottom: 20px;
+            color: #007bff;
+        }
+        .messages {
+            height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            margin-bottom: 20px;
+            padding: 10px;
+            text-align: left;
+            background-color: #f9f9f9;
+        }
+        .messages div {
+            margin-bottom: 10px;
+        }
+        .messages .user-message {
+            color: #333;
+            font-weight: bold;
+        }
+        .messages .bot-message {
+            color: #555;
+            margin-left: 10px;
+        }
+        .input-container {
+            display: flex;
+        }
+        .input-container input {
+            flex: 1;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 5px 0 0 5px;
+        }
+        .input-container button {
+            padding: 10px;
+            font-size: 16px;
+            background: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 0 5px 5px 0;
+        }
+        .input-container button:hover {
+            background: #0056b3;
+        }
+        .error {
+            color: red;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <h1>Sentiment Chatbot</h1>
+        <div class="messages" id="messages">
+            <!-- Chat messages will appear here -->
+        </div>
+        <div class="input-container">
+            <input type="text" id="user-input" placeholder="Type your message...">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+        <div class="error" id="error-message"></div>
+    </div>
+
+    <script>
+        const messagesDiv = document.getElementById("messages");
+        const errorDiv = document.getElementById("error-message");
+
+        function sendMessage() {
+            const userInput = document.getElementById("user-input").value.trim();
+            errorDiv.textContent = ""; // Clear any previous error messages
+
+            if (!userInput) {
+                errorDiv.textContent = "Please enter a message!";
+                return;
+            }
+
+            // Display user message
+            const userMessageDiv = document.createElement("div");
+            userMessageDiv.textContent = "You: " + userInput;
+            userMessageDiv.className = "user-message";
+            messagesDiv.appendChild(userMessageDiv);
+
+            // Send message to server
+            fetch("/get_sentiment", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message: userInput }),
+            })
+                .then((response) => {
+                    if (!response.ok) {
+                        throw new Error("Failed to fetch sentiment. Please try again.");
+                    }
+                    return response.json();
+                })
+                .then((data) => {
+                    // Display chatbot response
+                    const botMessageDiv = document.createElement("div");
+                    botMessageDiv.textContent = "Chatbot: " + data.message;
+                    botMessageDiv.className = "bot-message";
+                    messagesDiv.appendChild(botMessageDiv);
+                    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                })
+                .catch((error) => {
+                    console.error("Error:", error);
+                    errorDiv.textContent = "Error communicating with the server. Please try again.";
+                });
+
+            // Clear input
+            document.getElementById("user-input").value = "";
+        }
+    </script>
+</body>
+</html>
